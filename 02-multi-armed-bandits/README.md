@@ -5,6 +5,7 @@
 Tests are made with action value sample-average agents for ε = `0.1`, `0.01`, `0.001` and `0`
 ![stationary total rewards](results/stationary_total_rewards.png)
 ![stationary average rewards](results/stationary_average_rewards.png)
+![stationary optimal actions](results/stationary_optimal_actions.png)
 
 ## Non-stationary problem
 

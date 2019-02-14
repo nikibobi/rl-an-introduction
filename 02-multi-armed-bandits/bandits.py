@@ -39,9 +39,10 @@ class Agent(object):
     def __init__(self, eps):
         self.eps = eps
     
-    def init(self, actions):
+    def init(self, actions, q0=0):
         self.actions = actions
-        self.q = np.zeros(actions)
+        self.q0 = q0
+        self.q = np.full(actions, q0, dtype=np.float)
     
     def act(self):
         if np.random.rand() > self.eps:
@@ -64,8 +65,8 @@ class ActionValueAgent(Agent):
     def __init__(self, eps):
         super().__init__(eps)
     
-    def init(self, actions):
-        super().init(actions)
+    def init(self, actions, q0=0):
+        super().init(actions, q0)
         self.n = np.zeros(actions)
 
     def step_size(self, a):
@@ -76,7 +77,7 @@ class ActionValueAgent(Agent):
         super().update(a, r)
     
     def legend(self):
-        return 'ε = {}, Action Value'.format(self.eps)
+        return '$\epsilon = {}, Q_0 = {}$, Action Value'.format(self.eps, self.q0)
 
 class FixedStepAgent(Agent):
     def __init__(self, eps, alpha):
@@ -87,7 +88,7 @@ class FixedStepAgent(Agent):
         return self.alpha
     
     def legend(self):
-        return 'ε = {}, α = {}, Fixed Step'.format(self.eps, self.alpha)
+        return '$\epsilon = {}, \alpha = {}, Q_0 = {}$, Fixed Step'.format(self.eps, self.alpha, self.q0)
 
 
 def plot_rewards(metric, title, xlim, legend):
@@ -101,11 +102,25 @@ def plot_rewards(metric, title, xlim, legend):
     plt.savefig('results/{}.png'.format(title.lower().replace(' ', '_')))
     plt.show()
 
+def plot_optimal(metric, title, xlim, legend):
+    plt.plot(metric)
+    plt.title(title)
+    plt.gcf().canvas.set_window_title(title)
+    plt.xlim(0, xlim)
+    plt.xlabel('Step')
+    plt.gca().yaxis.set_major_formatter(ticker.PercentFormatter())
+    plt.ylim(0, 100)
+    plt.ylabel('Optimal Action %')
+    plt.gca().legend(legend)
+    plt.savefig('results/{}.png'.format(title.lower().replace(' ', '_')))
+    plt.show()
+
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
-    eps = [0.1, 0.01, 0.001, 0]
+    eps = [0.1, 0.01, 0]
     normal = np.random.randn(10000)
-    agents = [ActionValueAgent(eps=0.1), FixedStepAgent(eps=0.1, alpha=0.1)]
+    agents = [ActionValueAgent(eps=e) for e in eps] #FixedStepAgent(eps=0.1, alpha=0.1)
     total_rewards = np.zeros((steps, len(agents)))
+    optimal_actions = np.zeros_like(total_rewards)
     for p in tqdm(range(problems)):
         bandits = BANDITS
         if stationary:
@@ -117,17 +132,21 @@ def main(problems=PROBLEMS, steps=STEPS, stationary=True):
             agent.init(bandits)
         for t in range(steps):
             for i, agent in enumerate(agents):
+                a_opt = np.argmax(means)
                 a = agent.act()
                 r = bandit(a)
                 agent.update(a, r)
                 total_rewards[t, i] += r
+                optimal_actions[t, i] += a == a_opt
             if not stationary:
                 update_nonstationary(means)
     
     average_rewards = total_rewards / problems
+    optimal_actions = optimal_actions * 100.0 / problems
     legend = tuple(agent.legend() for agent in agents)
     plot_rewards(total_rewards, 'Total Rewards', steps, legend)
     plot_rewards(average_rewards, 'Average Rewards', steps, legend)
+    plot_optimal(optimal_actions, 'Optimal Actions', steps, legend)
 
 if __name__ == '__main__':
-    main(stationary=False, problems=PROBLEMS, steps=10_000)
+    main(stationary=True, problems=PROBLEMS, steps=STEPS)
