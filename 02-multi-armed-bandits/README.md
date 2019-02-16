@@ -17,3 +17,15 @@ Tests made with two agents:
 ![nonstationary average rewards](results/nonstationary_average_rewards.png)
 
 We can see that the fixed-step agent performed better for a non-stationary problem.
+
+## Optimistic Initial Values
+
+Two constant step agents with α = `0.1`:
+- One greedy (ε = `0`) and optimistic initial value = `5`
+- One ε-greedy (ε = `0.1`)
+
+![optimistic total rewards](results/optimistic_total_rewards.png)
+![optimistic average rewards](results/optimistic_average_rewards.png)
+![optimistic optimal actions](results/optimistic_optimal_actions.png)
+
+It is clear that the optimistic initial values agent performs better in the long run for stationary problems.

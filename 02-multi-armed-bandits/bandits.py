@@ -4,7 +4,7 @@ import numpy as np
 import seaborn as sns
 from scipy.stats import norm
 from tqdm import tqdm
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 BANDITS = 10
 PROBLEMS = 2000
@@ -35,14 +35,14 @@ def generate_nonstationary(n=BANDITS):
 def update_nonstationary(means):
     means += np.random.normal(scale=0.01, size=means.shape)
 
-class Agent(object):
-    def __init__(self, eps):
+class Agent(ABC):
+    def __init__(self, eps, q0=0):
         self.eps = eps
-    
-    def init(self, actions, q0=0):
-        self.actions = actions
         self.q0 = q0
-        self.q = np.full(actions, q0, dtype=np.float)
+    
+    def init(self, actions):
+        self.actions = actions
+        self.q = np.full(actions, self.q0, dtype=np.float)
     
     def act(self):
         if np.random.rand() > self.eps:
@@ -62,11 +62,11 @@ class Agent(object):
         pass
 
 class SampleAverageAgent(Agent):
-    def __init__(self, eps):
-        super().__init__(eps)
+    def __init__(self, eps, q0=0):
+        super().__init__(eps, q0)
     
-    def init(self, actions, q0=0):
-        super().init(actions, q0)
+    def init(self, actions):
+        super().init(actions)
         self.n = np.zeros(actions)
 
     def step_size(self, a):
@@ -77,18 +77,18 @@ class SampleAverageAgent(Agent):
         super().update(a, r)
     
     def legend(self):
-        return '$\epsilon = {}, Q_0 = {}$, Action Value'.format(self.eps, self.q0)
+        return r'$\epsilon = {}, Q_0 = {}, Action Value$'.format(self.eps, self.q0)
 
 class ConstantStepAgent(Agent):
-    def __init__(self, eps, alpha):
-        super().__init__(eps)
+    def __init__(self, eps, alpha, q0=0):
+        super().__init__(eps, q0)
         self.alpha = alpha
 
     def step_size(self, a):
         return self.alpha
     
     def legend(self):
-        return '$\epsilon = {}, \alpha = {}, Q_0 = {}$, Fixed Step'.format(self.eps, self.alpha, self.q0)
+        return r'$\epsilon = {}, \alpha = {}, Q_0 = {}, Fixed Step$'.format(self.eps, self.alpha, self.q0)
 
 
 def plot_rewards(metric, title, xlim, legend):
@@ -118,7 +118,7 @@ def plot_optimal(metric, title, xlim, legend):
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     eps = [0.1, 0.01, 0]
     normal = np.random.randn(10000)
-    agents = [SampleAverageAgent(eps=e) for e in eps] #ConstantStepAgent(eps=0.1, alpha=0.1)
+    agents = [ConstantStepAgent(eps=0, alpha=0.1, q0=5), ConstantStepAgent(eps=0.1, alpha=0.1)]
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
     for p in tqdm(range(problems)):
