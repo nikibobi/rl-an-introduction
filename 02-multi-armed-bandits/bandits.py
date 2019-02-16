@@ -77,7 +77,7 @@ class SampleAverageAgent(Agent):
         super().update(a, r)
     
     def legend(self):
-        return r'$\epsilon = {}, Q_0 = {}, Action Value$'.format(self.eps, self.q0)
+        return r'$\epsilon = {}, Q_0 = {}$ Sample Average'.format(self.eps, self.q0)
 
 class ConstantStepAgent(Agent):
     def __init__(self, eps, alpha, q0=0):
@@ -88,7 +88,7 @@ class ConstantStepAgent(Agent):
         return self.alpha
     
     def legend(self):
-        return r'$\epsilon = {}, \alpha = {}, Q_0 = {}, Fixed Step$'.format(self.eps, self.alpha, self.q0)
+        return r'$\epsilon = {}, \alpha = {}, Q_0 = {}$ Constant Step'.format(self.eps, self.alpha, self.q0)
 
 
 def plot_rewards(metric, title, xlim, legend):
