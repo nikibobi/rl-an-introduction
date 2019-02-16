@@ -61,7 +61,7 @@ class Agent(object):
     def legend(self):
         pass
 
-class ActionValueAgent(Agent):
+class SampleAverageAgent(Agent):
     def __init__(self, eps):
         super().__init__(eps)
     
@@ -79,7 +79,7 @@ class ActionValueAgent(Agent):
     def legend(self):
         return '$\epsilon = {}, Q_0 = {}$, Action Value'.format(self.eps, self.q0)
 
-class FixedStepAgent(Agent):
+class ConstantStepAgent(Agent):
     def __init__(self, eps, alpha):
         super().__init__(eps)
         self.alpha = alpha
@@ -118,7 +118,7 @@ def plot_optimal(metric, title, xlim, legend):
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     eps = [0.1, 0.01, 0]
     normal = np.random.randn(10000)
-    agents = [ActionValueAgent(eps=e) for e in eps] #FixedStepAgent(eps=0.1, alpha=0.1)
+    agents = [SampleAverageAgent(eps=e) for e in eps] #ConstantStepAgent(eps=0.1, alpha=0.1)
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
     for p in tqdm(range(problems)):
