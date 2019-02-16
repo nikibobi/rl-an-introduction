@@ -90,6 +90,16 @@ class ConstantStepAgent(Agent):
     def legend(self):
         return r'$\epsilon = {}, \alpha = {}, Q_0 = {}$ Constant Step'.format(self.eps, self.alpha, self.q0)
 
+class UCBAgent(SampleAverageAgent):
+    def __init__(self, c):
+        super().__init__(eps=0)
+        self.c = c
+
+    def act(self):
+        return np.argmax(self.q + self.c * np.sqrt(np.log(np.sum(self.n)) / self.n))
+
+    def legend(self):
+        return r'$c = {}$ Upper-Confidence-Bound'.format(self.c)
 
 def plot_rewards(metric, title, xlim, legend):
     plt.plot(metric)
@@ -118,7 +128,7 @@ def plot_optimal(metric, title, xlim, legend):
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     eps = [0.1, 0.01, 0]
     normal = np.random.randn(10000)
-    agents = [ConstantStepAgent(eps=0, alpha=0.1, q0=5), ConstantStepAgent(eps=0.1, alpha=0.1)]
+    agents = [UCBAgent(c=2), SampleAverageAgent(eps=0.1)]
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
     for p in tqdm(range(problems)):
