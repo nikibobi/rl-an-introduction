@@ -10,30 +10,29 @@ BANDITS = 10
 PROBLEMS = 2000
 STEPS = 1000
 
-def generate_stationary(normal, n=BANDITS, plot=False):
+def generate_stationary(n=BANDITS):
     means = np.random.randn(n)
-    data = np.repeat(normal[:, np.newaxis], n, axis=1) + means
-
-    if plot:
-        sns.set(style='whitegrid')
-        ax = sns.violinplot(data=data, inner=None)
-        ax = sns.scatterplot(data=means, ax=ax)
-        ax.set_xlabel('Actions')
-        ax.set_ylabel('Q(a)')
-        ax.set_xticklabels(np.arange(n) + 1)
-        ax.yaxis.set_major_locator(ticker.MultipleLocator())
-        plt.show()
-
     return means
 
 def generate_nonstationary(n=BANDITS):
     mean = np.random.randn()
     means = np.full(n, mean)
-
     return means
 
 def update_nonstationary(means):
     means += np.random.normal(scale=0.01, size=means.shape)
+
+def plot_bandits(means, normal):
+    n = len(means)
+    data = np.repeat(normal[:, np.newaxis], n, axis=1) + means
+    sns.set(style='whitegrid')
+    ax = sns.violinplot(data=data, inner=None)
+    ax = sns.scatterplot(data=means, ax=ax)
+    ax.set_xlabel('Actions')
+    ax.set_ylabel('Q(a)')
+    ax.set_xticklabels(np.arange(n) + 1)
+    ax.yaxis.set_major_locator(ticker.MultipleLocator())
+    plt.show()
 
 class Agent(ABC):
     def __init__(self, eps, q0=0):
@@ -101,28 +100,39 @@ class UCBAgent(SampleAverageAgent):
     def legend(self):
         return r'$c = {}$ Upper-Confidence-Bound'.format(self.c)
 
-def plot_rewards(metric, title, xlim, legend):
-    plt.plot(metric)
-    plt.title(title)
-    plt.gcf().canvas.set_window_title(title)
-    plt.xlim(0, xlim)
-    plt.xlabel('Step')
-    plt.ylabel('Reward')
-    plt.gca().legend(legend)
-    plt.savefig('results/{}.png'.format(title.lower().replace(' ', '_')))
+def plot_rewards(metric, n, xlim, legend, filename='rewards', title='Rewards'):
+    fig, ax1 = plt.subplots()
+    fig.canvas.set_window_title(title)
+    ax1.set_title(title)
+    ax1.plot(metric)
+    ax1.legend(legend)
+    ax1.set_xlim(0, xlim)
+    ax1.set_xlabel('Step')
+    ax1.set_ylabel('Total Reward')
+    ax2 = ax1.twinx()
+    ax2.plot(metric / n)
+    ax2.set_ylabel('Average Reward')
+    fig.tight_layout()
+    fig.savefig('results/{}.png'.format(filename))
     plt.show()
 
-def plot_optimal(metric, title, xlim, legend):
-    plt.plot(metric)
-    plt.title(title)
-    plt.gcf().canvas.set_window_title(title)
-    plt.xlim(0, xlim)
-    plt.xlabel('Step')
-    plt.gca().yaxis.set_major_formatter(ticker.PercentFormatter())
-    plt.ylim(0, 100)
-    plt.ylabel('Optimal Action %')
-    plt.gca().legend(legend)
-    plt.savefig('results/{}.png'.format(title.lower().replace(' ', '_')))
+def plot_optimal(metric, xlim, legend, filename='optimal_actions', title='Optimal Actions'):
+    fig, ax1 = plt.subplots()
+    fig.canvas.set_window_title(title)
+    ax1.set_title(title)
+    ax1.plot(metric * 100.0)
+    ax1.legend(legend)
+    ax1.set_xlim(0, xlim)
+    ax1.set_xlabel('Step')
+    ax1.set_ylim(0, 100)
+    ax1.set_ylabel('Optimal Action %')
+    ax1.yaxis.set_major_formatter(ticker.PercentFormatter())
+    ax2 = ax1.twinx()
+    ax2.plot(metric)
+    ax2.set_ylim(0, 1)
+    ax2.set_ylabel('Optimal Action P')
+    fig.tight_layout()
+    fig.savefig('results/{}.png'.format(filename))
     plt.show()
 
 def normal_values(num, e=0.01):
@@ -137,7 +147,7 @@ def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     for p in tqdm(range(problems)):
         bandits = BANDITS
         if stationary:
-            means = generate_stationary(normal, bandits, plot=False)
+            means = generate_stationary(bandits)
         else:
             means = generate_nonstationary(bandits)
         bandit = lambda a: np.random.randn() + means[a]
@@ -153,13 +163,11 @@ def main(problems=PROBLEMS, steps=STEPS, stationary=True):
                 optimal_actions[t, i] += a == a_opt
             if not stationary:
                 update_nonstationary(means)
-    
-    average_rewards = total_rewards / problems
-    optimal_actions = optimal_actions * 100.0 / problems
+
+    optimal_actions /= problems
     legend = tuple(agent.legend() for agent in agents)
-    plot_rewards(total_rewards, 'Total Rewards', steps, legend)
-    plot_rewards(average_rewards, 'Average Rewards', steps, legend)
-    plot_optimal(optimal_actions, 'Optimal Actions', steps, legend)
+    plot_rewards(total_rewards, problems, steps, legend)
+    plot_optimal(optimal_actions, steps, legend)
 
 if __name__ == '__main__':
     main(stationary=True, problems=PROBLEMS, steps=STEPS)
