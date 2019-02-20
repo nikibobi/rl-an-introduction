@@ -125,9 +125,12 @@ def plot_optimal(metric, title, xlim, legend):
     plt.savefig('results/{}.png'.format(title.lower().replace(' ', '_')))
     plt.show()
 
+def normal_values(num, e=0.01):
+    return norm.ppf(np.linspace(e, 1 - e, num=num, dtype=np.float))
+
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     eps = [0.1, 0.01, 0]
-    normal = np.random.randn(10000)
+    normal = normal_values(100)
     agents = [UCBAgent(c=2), SampleAverageAgent(eps=0.1)]
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
