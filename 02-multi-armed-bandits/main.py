@@ -1,48 +1,33 @@
 import numpy as np
 from tqdm import tqdm
-from plots import *
+from env import *
 from agents import *
+from plots import *
 
 BANDITS = 10
 PROBLEMS = 2000
 STEPS = 1000
 
-def generate_stationary(n=BANDITS):
-    means = np.random.randn(n)
-    return means
-
-def generate_nonstationary(n=BANDITS):
-    mean = np.random.randn()
-    means = np.full(n, mean)
-    return means
-
-def update_nonstationary(means, var=0.01):
-    means += np.random.normal(scale=var, size=means.shape)
-
 def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     eps = [0.1, 0.01, 0]
     agents = [UCBAgent(c=2), SampleAverageAgent(eps=0.1)]
+    bandits = BANDITS
+    env = create_bandits(bandits, stationary)
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
     for p in tqdm(range(problems)):
-        bandits = BANDITS
-        if stationary:
-            means = generate_stationary(bandits)
-        else:
-            means = generate_nonstationary(bandits)
-        bandit = lambda a: np.random.randn() + means[a]
+        env.reset()
         for agent in agents:
             agent.init(bandits)
         for t in range(steps):
+            a_opt = env.optimal()
             for i, agent in enumerate(agents):
-                a_opt = np.argmax(means)
                 a = agent.act()
-                r = bandit(a)
+                r = env.step(a)
                 agent.update(a, r)
                 total_rewards[t, i] += r
                 optimal_actions[t, i] += a == a_opt
-            if not stationary:
-                update_nonstationary(means)
+            env.update()
 
     optimal_actions /= problems
     legend = tuple(agent.legend() for agent in agents)
@@ -50,4 +35,4 @@ def main(problems=PROBLEMS, steps=STEPS, stationary=True):
     plot_optimal(optimal_actions, steps, legend)
 
 if __name__ == '__main__':
-    main(stationary=True, problems=PROBLEMS, steps=STEPS)
+    main(stationary=False, problems=PROBLEMS, steps=STEPS)
