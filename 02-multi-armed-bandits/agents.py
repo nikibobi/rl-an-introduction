@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.special import softmax
 from abc import abstractmethod, ABC
 
 class Agent(ABC):
@@ -66,3 +67,29 @@ class UCBAgent(SampleAverageAgent):
 
     def legend(self):
         return r'$c = {}$ Upper-Confidence-Bound'.format(self.c)
+
+class GradientBanditAgent(Agent):
+    def __init__(self, alpha):
+        super().__init__(eps=0)
+        self.alpha = alpha
+    
+    def init(self, actions):
+        self.actions = actions
+        self.h = np.zeros(actions, dtype=np.float)
+        self.baseline = 0.0
+        self.t = 0
+        self.indicator = np.eye(actions)
+    
+    def act(self):
+        return np.random.choice(self.actions, p=softmax(self.h))
+
+    def step_size(self):
+        return self.alpha
+
+    def update(self, a, r):
+        self.baseline = (self.baseline * self.t + r) / (self.t + 1.0)
+        self.t += 1
+        self.h += self.step_size() * (r - self.baseline) * (self.indicator[a] - softmax(self.h))
+
+    def legend(self):
+        return r'$\alpha = {}$ Gradient Bandit'.format(self.alpha)

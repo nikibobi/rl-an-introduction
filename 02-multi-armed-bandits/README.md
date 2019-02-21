@@ -35,3 +35,9 @@ It is clear that the optimistic initial values agent performs better in the long
 ![ucb total rewards](results/ucb_total_rewards.png)
 ![ucb average rewards](results/ucb_average_rewards.png)
 ![ucb optimal actions](results/ucb_optimal_actions.png)
+
+
+## Gradient Bandits with baseline
+
+![gradient bandits rewards](results/gradient_rewards.png)
+![gradient bandits optimal actions](results/gradient_optimal_actions.png)

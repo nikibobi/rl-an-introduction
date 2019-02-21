@@ -12,7 +12,7 @@ STEPS = 1000
 
 def experiment(bandits, problems, steps, stationary):
     eps = [0.1, 0.01, 0]
-    agents = [UCBAgent(c=2), SampleAverageAgent(eps=0.1)]
+    agents = [GradientBanditAgent(alpha=0.1), GradientBanditAgent(alpha=0.4)]
     env = create_bandits(bandits, stationary)
     total_rewards = np.zeros((steps, len(agents)))
     optimal_actions = np.zeros_like(total_rewards)
