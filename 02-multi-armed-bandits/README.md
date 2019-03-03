@@ -41,3 +41,9 @@ It is clear that the optimistic initial values agent performs better in the long
 
 ![gradient bandits rewards](results/gradient_rewards.png)
 ![gradient bandits optimal actions](results/gradient_optimal_actions.png)
+
+## Summary
+
+Summary of several different agents over a range of hyperparameters
+
+![summary average rewards](results/summary.png)

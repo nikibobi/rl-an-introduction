@@ -55,3 +55,38 @@ def plot_optimal(metric, xlim, legend, filename='optimal_actions', title='Optima
     fig.tight_layout()
     fig.savefig('results/{}.png'.format(filename))
     plt.show()
+
+def multicolor_xlabel(ax, list_of_strings, anchorpad=0, **kw):
+    # code from: https://stackoverflow.com/a/33162465
+    from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker, VPacker
+    boxes = [TextArea(text, textprops=dict(color='C{}'.format(i), ha='left', va='bottom', **kw))
+                for i, text in enumerate(list_of_strings)]
+    xbox = HPacker(children=boxes, align='center', pad=0, sep=5)
+    anchored_xbox = AnchoredOffsetbox(loc='lower center', child=xbox, pad=anchorpad, frameon=False,
+                                        bbox_transform=ax.transAxes, borderpad=0.0)
+    ax.add_artist(anchored_xbox)
+
+def plot_summary(results, steps):
+    fig, ax = plt.subplots()
+    fig.set_size_inches((16, 9))
+    title = 'Summary'
+    fig.canvas.set_window_title(title)
+    ax.set_title(title)
+    params = []
+
+    for x, y, label, param in results:
+        ax.plot(x, y, label=label)
+        params.append(param)
+
+    powers = range(-7, 3)
+    ticks = [2 ** i for i in powers]
+    ax.set_xscale('log', basex=2)
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([r'$\frac{1}{%s}$' % (2 ** -i) if i < 0 else str(2 ** i) for i in powers])
+    ax.set_xlim(min(ticks), max(ticks))
+    ax.set_xlabel('Parameter Value')
+    multicolor_xlabel(ax, params, size=22)
+    ax.set_ylabel('Average reward over first {} steps'.format(steps))
+    plt.legend()
+    fig.savefig('results/summary.png', dpi=100)
+    plt.show()
